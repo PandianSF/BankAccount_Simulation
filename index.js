@@ -143,7 +143,6 @@ app.post("/transferMoney", (req, res) => {
     //To update ledger
     const transactionId = (0, id_1.generateID)("HEX");
     const accountId = donorAcc.account_Id;
-    console.log("----->", donorAcc);
     const transactionType = req.body.transactionType;
     const sentAmount = req.body.sentAmount;
     const transactions = {
@@ -163,12 +162,24 @@ app.post("/transferMoney", (req, res) => {
 //To Receive Money
 app.post("/receiveMoney", (req, res) => {
     const donorAcc = accounts.find((v) => v.account_Id === req.body.donorAccountId);
-    const merchantAcc = accounts.find((v) => v.account_Id === req.body.merchantAccountId);
-    const creditAmount = merchantAcc.balance + req.body.receivedAmount;
-    merchantAcc.balance = creditAmount;
+    const receiverAcc = accounts.find((v) => v.account_Id === req.body.receiverAccountId);
+    if (!donorAcc || donorAcc.kycStatus === "pending") {
+        res.send({
+            status: "ERROR",
+            message: "Donor Account not found/Kyc checks not done!",
+        });
+    }
+    if (!receiverAcc || receiverAcc.kycStatus === "pending") {
+        res.send({
+            status: "ERROR",
+            message: "Merchant Account not found/Kyc checks not done!",
+        });
+    }
+    const creditAmount = receiverAcc.balance + req.body.receivedAmount;
+    receiverAcc.balance = creditAmount;
     //To update ledger
     const transactionId = (0, id_1.generateID)("HEX");
-    const accountId = merchantAcc.account_Id;
+    const accountId = receiverAcc.account_Id;
     const transactionType = req.body.transactionType;
     const receivedAmount = req.body.receivedAmount;
     const transactions = {
@@ -178,6 +189,7 @@ app.post("/receiveMoney", (req, res) => {
         receivedAmount,
     };
     ledger.push(transactions);
+    console.log(ledger);
     res.send({
         status: "SUCCESS",
         message: "Amount received Successfully!",

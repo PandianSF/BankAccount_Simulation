@@ -182,15 +182,27 @@ app.post("/receiveMoney", (req: Request, res: Response) => {
   const donorAcc = accounts.find(
     (v) => v.account_Id === req.body.donorAccountId
   );
-  const merchantAcc = accounts.find(
-    (v) => v.account_Id === req.body.merchantAccountId
+  const receiverAcc = accounts.find(
+    (v) => v.account_Id === req.body.receiverAccountId
   );
-  const creditAmount = merchantAcc.balance + req.body.receivedAmount;
-  merchantAcc.balance = creditAmount;
+  if (!donorAcc || donorAcc.kycStatus === "pending") {
+    res.send({
+      status: "ERROR",
+      message: "Donor Account not found/Kyc checks not done!",
+    });
+  }
+  if (!receiverAcc || receiverAcc.kycStatus === "pending") {
+    res.send({
+      status: "ERROR",
+      message: "Merchant Account not found/Kyc checks not done!",
+    });
+  }
+  const creditAmount = receiverAcc.balance + req.body.receivedAmount;
+  receiverAcc.balance = creditAmount;
 
   //To update ledger
   const transactionId = generateID("HEX");
-  const accountId = merchantAcc.account_Id;
+  const accountId = receiverAcc.account_Id;
   const transactionType = req.body.transactionType;
   const receivedAmount = req.body.receivedAmount;
   const transactions = {
