@@ -63,7 +63,7 @@ app.get("/Kyc", (req, res) => {
 //To Deposit Money
 app.put("/depositMoney", (req, res) => {
     const findAccount = accounts.find((v) => v.account_Id === req.body.account_Id);
-    if (!findAccount || findAccount.name !== req.body.name) {
+    if (!findAccount) {
         throw new Error("Account not found/Account Invalid!");
     }
     else if (findAccount.kycStatus === "pending") {
@@ -142,7 +142,8 @@ app.post("/transferMoney", (req, res) => {
     receiverAcc.balance = creditAmount;
     //To update ledger
     const transactionId = (0, id_1.generateID)("HEX");
-    const accountId = donorAcc.donorAccountId;
+    const accountId = donorAcc.account_Id;
+    console.log("----->", donorAcc);
     const transactionType = req.body.transactionType;
     const sentAmount = req.body.sentAmount;
     const transactions = {
